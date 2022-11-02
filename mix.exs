@@ -152,7 +152,9 @@ defmodule Credo.Mixfile do
       {:jason, "~> 1.0"},
       {:ex_doc, "~> 0.25", only: :dev, runtime: false},
       {:excoveralls, "~> 0.10", only: :test},
-      {:inch_ex, "~> 2.0", only: [:dev, :test], runtime: false}
+      {:inch_ex, "~> 2.0", only: [:dev, :test], runtime: false},
+      {:gen_lsp, github: "mhanberg/gen_lsp"}
+      # {:gen_lsp, path: "../gen_lsp"}
     ]
   end
 
