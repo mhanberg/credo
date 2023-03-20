@@ -27,7 +27,7 @@ defmodule Credo.Check.ConfigComment do
   def new(instruction, param_string, line_no)
 
   def new("#{@instruction_disable_lines}:" <> line_count, param_string, line_no) do
-    line_count = String.to_integer(line_count)
+    line_count = String.to_integer(if String.length(line_count) > 0, do: line_count, else: "0")
 
     params =
       param_string
