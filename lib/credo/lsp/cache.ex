@@ -18,7 +18,9 @@ defmodule Credo.Lsp.Cache do
   end
 
   def refresh(cache, lsp) do
-    issues = Credo.Execution.get_issues(Credo.run(["--strict", "--all"]))
+    dir = URI.new!(lsp.assigns.root_uri).path
+
+    issues = Credo.Execution.get_issues(Credo.run(["--strict", "--all", "#{dir}/**/*.ex"]))
 
     GenLSP.log(lsp, :info, "[Credo] Found #{Enum.count(issues)} issues")
 

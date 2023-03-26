@@ -18,6 +18,7 @@ defmodule Credo.Lsp do
   alias GenLSP.Requests.{Initialize, Shutdown}
 
   alias GenLSP.Structures.{
+    InitializeParams,
     InitializeResult,
     SaveOptions,
     ServerCapabilities,
@@ -38,7 +39,7 @@ defmodule Credo.Lsp do
   end
 
   @impl true
-  def handle_request(%Initialize{}, lsp) do
+  def handle_request(%Initialize{params: %InitializeParams{root_uri: root_uri}}, lsp) do
     {:reply,
      %InitializeResult{
        capabilities: %ServerCapabilities{
@@ -49,7 +50,7 @@ defmodule Credo.Lsp do
          }
        },
        server_info: %{name: "Credo"}
-     }, lsp}
+     }, assign(lsp, root_uri: root_uri)}
   end
 
   def handle_request(%Shutdown{}, lsp) do

@@ -9,22 +9,26 @@ defmodule Credo.LspTest do
     server = server(Lsp, cache: cache)
     client = client(server)
 
-    [server: server, client: client]
+    cwd = File.cwd!()
+
+    root_path = Path.join(cwd, "test/fixtures/lsp")
+
+    assert :ok ==
+             request(client, %{
+               method: "initialize",
+               id: 1,
+               jsonrpc: "2.0",
+               params: %{capabilities: %{}, rootUri: "file://#{root_path}"}
+             })
+
+    [server: server, client: client, cwd: cwd]
   end
 
   test "can start the LSP server", %{server: server} do
     assert alive?(server)
   end
 
-  test "can initialize the server", %{client: client} do
-    assert :ok ==
-             request(client, %{
-               method: "initialize",
-               id: 1,
-               jsonrpc: "2.0",
-               params: %{capabilities: %{}}
-             })
-
+  test "can initialize the server" do
     assert_result(1, %{
       "capabilities" => %{
         "textDocumentSync" => %{
@@ -39,7 +43,7 @@ defmodule Credo.LspTest do
     })
   end
 
-  test "publishes diagnostics once the client has initialized", %{client: client} do
+  test "publishes diagnostics once the client has initialized", %{client: client, cwd: cwd} do
     assert :ok == notify(client, %{method: "initialized", jsonrpc: "2.0", params: %{}})
 
     assert_notification("window/logMessage", %{
@@ -47,15 +51,19 @@ defmodule Credo.LspTest do
       "type" => 4
     })
 
-    assert_notification("textDocument/publishDiagnostics", %{
-      "params" => %{
-        "uri" => "file://" <> _,
-        "diagnostics" => diagnostics
-      }
-    })
+    for file <- ["foo.ex", "bar.ex"] do
+      uri =
+        to_string(%URI{
+          host: "",
+          scheme: "file",
+          path: Path.join([cwd, "test/fixtures/lsp", file])
+        })
 
-    dbg(diagnostics)
-
-    assert false
+      assert_notification(
+        "textDocument/publishDiagnostics",
+        %{"uri" => ^uri, "diagnostics" => [%{"severity" => 4}]},
+        500
+      )
+    end
   end
 end
