@@ -16,7 +16,8 @@ defmodule Credo.SourcesTest do
     expected = [
       "lib/mix/tasks/credo.ex",
       "lib/mix/tasks/credo.gen.check.ex",
-      "lib/mix/tasks/credo.gen.config.ex"
+      "lib/mix/tasks/credo.gen.config.ex",
+      "lib/mix/tasks/credo.lsp.ex"
     ]
 
     files =
@@ -55,7 +56,8 @@ defmodule Credo.SourcesTest do
     expected = [
       "lib/mix/tasks/credo.ex",
       "lib/mix/tasks/credo.gen.check.ex",
-      "lib/mix/tasks/credo.gen.config.ex"
+      "lib/mix/tasks/credo.gen.config.ex",
+      "lib/mix/tasks/credo.lsp.ex"
     ]
 
     files =
@@ -97,7 +99,8 @@ defmodule Credo.SourcesTest do
     expected = [
       "lib/mix/tasks/credo.ex",
       "lib/mix/tasks/credo.gen.check.ex",
-      "lib/mix/tasks/credo.gen.config.ex"
+      "lib/mix/tasks/credo.gen.config.ex",
+      "lib/mix/tasks/credo.lsp.ex"
     ]
 
     files =
@@ -123,7 +126,7 @@ defmodule Credo.SourcesTest do
       files: %{excluded: [~r/chec/, ~r/conf/], included: ["lib/mix"]}
     }
 
-    expected = ["lib/mix/tasks/credo.ex"]
+    expected = ["lib/mix/tasks/credo.ex", "lib/mix/tasks/credo.lsp.ex"]
 
     files =
       exec
@@ -143,7 +146,8 @@ defmodule Credo.SourcesTest do
       "lib/credo.ex",
       "lib/mix/tasks/credo.ex",
       "lib/mix/tasks/credo.gen.check.ex",
-      "lib/mix/tasks/credo.gen.config.ex"
+      "lib/mix/tasks/credo.gen.config.ex",
+      "lib/mix/tasks/credo.lsp.ex"
     ]
 
     files =
@@ -160,7 +164,7 @@ defmodule Credo.SourcesTest do
       files: %{excluded: ["lib/**/*gen*.ex"], included: ["lib/mix"]}
     }
 
-    expected = ["lib/mix/tasks/credo.ex"]
+    expected = ["lib/mix/tasks/credo.ex", "lib/mix/tasks/credo.lsp.ex"]
 
     files =
       exec
@@ -180,7 +184,8 @@ defmodule Credo.SourcesTest do
       "lib/credo.ex",
       "lib/mix/tasks/credo.ex",
       "lib/mix/tasks/credo.gen.check.ex",
-      "lib/mix/tasks/credo.gen.config.ex"
+      "lib/mix/tasks/credo.gen.config.ex",
+      "lib/mix/tasks/credo.lsp.ex"
     ]
 
     files =
