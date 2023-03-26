@@ -76,12 +76,6 @@ defmodule Credo.Lsp do
     {:noreply, lsp}
   end
 
-  def handle_notification(%TextDocumentDidOpen{}, lsp) do
-    Task.start_link(fn -> Diagnostics.publish(lsp.assigns.cache, lsp) end)
-
-    {:noreply, lsp}
-  end
-
   def handle_notification(%TextDocumentDidChange{}, lsp) do
     Task.start_link(fn ->
       Diagnostics.clear(lsp.assigns.cache)
@@ -91,7 +85,8 @@ defmodule Credo.Lsp do
     {:noreply, lsp}
   end
 
-  def handle_notification(%TextDocumentDidClose{}, lsp) do
+  def handle_notification(%note{}, lsp)
+      when note in [TextDocumentDidOpen, TextDocumentDidClose] do
     {:noreply, lsp}
   end
 

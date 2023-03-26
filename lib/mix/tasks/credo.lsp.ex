@@ -1,10 +1,21 @@
 defmodule Mix.Tasks.Credo.Lsp do
+  @moduledoc """
+  Starts the LSP server.
+
+  The LSP server can be used to show Credo diagnostics in text editors such as Visual Studio Code, Vim/Neovim, and Emacs, and
+  is generally made available through an editor extension.
+
+  ## Usage
+
+  ```bash
+  $ mix credo.lsp
+  ```
+  """
   use Mix.Task
 
   alias Credo.Lsp
 
-  @shortdoc "A placeholder shortdoc for mix "
-  @moduledoc @shortdoc
+  @shortdoc "Starts the LSP server"
 
   @doc false
   def run(_argv) do
