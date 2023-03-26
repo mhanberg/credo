@@ -18,7 +18,7 @@ defmodule Credo.Lsp.Cache do
   end
 
   def refresh(cache, lsp) do
-    dir = URI.new!(lsp.assigns.root_uri).path
+    dir = URI.parse(lsp.assigns.root_uri).path
 
     issues = Credo.Execution.get_issues(Credo.run(["--strict", "--all", "#{dir}/**/*.ex"]))
 
