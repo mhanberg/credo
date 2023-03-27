@@ -28,7 +28,9 @@ defmodule Credo.Lsp do
   alias Credo.Lsp.Cache, as: Diagnostics
 
   def start_link(args) do
-    GenLSP.start_link(__MODULE__, args, [])
+    {args, opts} = Keyword.split(args, [:cache])
+
+    GenLSP.start_link(__MODULE__, args, opts)
   end
 
   @impl true
