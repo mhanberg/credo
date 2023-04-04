@@ -4,7 +4,7 @@ defmodule Credo.Lsp do
   """
   use GenLSP
 
-  alias GenLSP.Enumerations.TextDocumentSyncKind
+  alias GenLSP.Enumerations.{CodeActionKind, TextDocumentSyncKind}
 
   alias GenLSP.Notifications.{
     Exit,
@@ -15,13 +15,15 @@ defmodule Credo.Lsp do
     TextDocumentDidSave
   }
 
-  alias GenLSP.Requests.{Initialize, Shutdown}
+  alias GenLSP.Requests.{Initialize, Shutdown, TextDocumentCodeAction}
 
   alias GenLSP.Structures.{
+    CodeActionOptions,
     InitializeParams,
     InitializeResult,
     SaveOptions,
     ServerCapabilities,
+    TextDocumentIdentifier,
     TextDocumentSyncOptions
   }
 
@@ -49,10 +51,50 @@ defmodule Credo.Lsp do
            open_close: true,
            save: %SaveOptions{include_text: true},
            change: TextDocumentSyncKind.full()
-         }
+         },
+         code_action_provider: %CodeActionOptions{code_action_kinds: [CodeActionKind.quick_fix()]}
        },
        server_info: %{name: "Credo"}
      }, assign(lsp, root_uri: root_uri)}
+  end
+
+  def handle_request(
+        %TextDocumentCodeAction{
+          params: %GenLSP.Structures.CodeActionParams{
+            context: %GenLSP.Structures.CodeActionContext{diagnostics: diagnostics},
+            text_document: %TextDocumentIdentifier{uri: uri}
+          }
+        },
+        lsp
+      ) do
+    code_actions =
+      for %GenLSP.Structures.Diagnostic{} = d <- diagnostics do
+        check =
+          d.data["check"]
+          |> to_string()
+          |> String.replace("Elixir.", "")
+
+        position = %GenLSP.Structures.Position{
+          line: d.range.start.line,
+          character: 0
+        }
+
+        %GenLSP.Structures.CodeAction{
+          title: "Disable #{check}",
+          edit: %GenLSP.Structures.WorkspaceEdit{
+            changes: %{
+              uri => [
+                %GenLSP.Structures.TextEdit{
+                  new_text: "# credo:disable-for-next-line #{check}\n",
+                  range: %GenLSP.Structures.Range{start: position, end: position}
+                }
+              ]
+            }
+          }
+        }
+      end
+
+    {:reply, code_actions, lsp}
   end
 
   def handle_request(%Shutdown{}, lsp) do

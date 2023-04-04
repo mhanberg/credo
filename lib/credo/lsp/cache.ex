@@ -27,10 +27,11 @@ defmodule Credo.Lsp.Cache do
     for issue <- issues do
       diagnostic = %Diagnostic{
         range: %Range{
-          start: %Position{line: issue.line_no - 1, character: issue.column || 0},
-          end: %Position{line: issue.line_no, character: 0}
+          start: %Position{line: issue.line_no - 1, character: (issue.column || 1) - 1},
+          end: %Position{line: issue.line_no - 1, character: (issue.column || 1)},
         },
         severity: category_to_severity(issue.category),
+        data: %{check: issue.check},
         message: """
         #{issue.message}
 

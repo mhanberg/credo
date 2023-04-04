@@ -18,12 +18,22 @@ defmodule Mix.Tasks.Credo.Lsp do
   @shortdoc "Starts the LSP server"
 
   @doc false
-  def run(_argv) do
+  def run(argv) do
+    {opts, _} = OptionParser.parse!(argv, strict: [stdio: :boolean, port: :integer])
     System.no_halt(true)
     {:ok, _} = Application.ensure_all_started(:credo)
     GenServer.call(Credo.CLI.Output.Shell, {:suppress_output, true})
 
-    {:ok, buffer} = GenLSP.Buffer.start_link([])
+    buffer_opts =
+      cond do
+        opts[:stdio] -> []
+        is_integer(opts[:port]) ->
+          IO.puts "Starting on port #{opts[:port]}"
+          [communication: {GenLSP.Communication.TCP, [port: opts[:port]]}]
+        true -> raise "Unknown option"
+      end
+
+    {:ok, buffer} = GenLSP.Buffer.start_link(buffer_opts)
     {:ok, cache} = Lsp.Cache.start_link([])
     {:ok, _} = Lsp.start_link(buffer: buffer, cache: cache)
   end
