@@ -66,4 +66,64 @@ defmodule Credo.LspTest do
       )
     end
   end
+
+  test "code actions", %{client: client, cwd: cwd} do
+    assert :ok == notify(client, %{method: "initialized", jsonrpc: "2.0", params: %{}})
+
+    uri =
+      to_string(%URI{
+        host: "",
+        scheme: "file",
+        path: Path.join([cwd, "test/fixtures/lsp", "foo.ex"])
+      })
+
+    assert_notification(
+      "textDocument/publishDiagnostics",
+      %{"uri" => ^uri, "diagnostics" => [%{"severity" => 4} = diagnostic]},
+      500
+    )
+
+    assert :ok ==
+             request(client, %{
+               method: "textDocument/codeAction",
+               jsonrpc: "2.0",
+               id: 2,
+               params: %{
+                 context: %{diagnostics: [diagnostic]},
+                 textDocument: %{uri: uri},
+                 range: %{start: %{line: 0, character: 0}, end: %{line: 0, character: 0}}
+               }
+             })
+
+    assert_result(
+      2,
+      [
+        %{
+          "command" => nil,
+          "data" => nil,
+          "diagnostics" => nil,
+          "disabled" => nil,
+          "edit" => %{
+            "changeAnnotations" => nil,
+            "changes" => %{
+              ^uri => [
+                %{
+                  "newText" =>
+                    "# credo:disable-for-next-line Credo.Check.Readability.ModuleDoc\n",
+                  "range" => %{
+                    "end" => %{"character" => 0, "line" => 0},
+                    "start" => %{"character" => 0, "line" => 0}
+                  }
+                }
+              ]
+            },
+            "documentChanges" => nil
+          },
+          "isPreferred" => nil,
+          "kind" => nil,
+          "title" => "Disable Credo.Check.Readability.ModuleDoc"
+        }
+      ]
+    )
+  end
 end

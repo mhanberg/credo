@@ -18,6 +18,9 @@ defmodule Credo.Lsp do
   alias GenLSP.Requests.{Initialize, Shutdown, TextDocumentCodeAction}
 
   alias GenLSP.Structures.{
+    Diagnostic,
+    Position,
+    Range,
     CodeActionOptions,
     InitializeParams,
     InitializeResult,
@@ -104,8 +107,8 @@ defmodule Credo.Lsp do
   @impl true
   def handle_notification(%Initialized{}, lsp) do
     GenLSP.log(lsp, :log, "[Credo] LSP Initialized!")
-    Diagnostics.refresh(lsp.assigns.cache, lsp)
-    Diagnostics.publish(lsp.assigns.cache, lsp)
+    refresh(lsp)
+    publish(lsp)
 
     {:noreply, lsp}
   end
@@ -113,8 +116,8 @@ defmodule Credo.Lsp do
   def handle_notification(%TextDocumentDidSave{}, lsp) do
     Task.start_link(fn ->
       Diagnostics.clear(lsp.assigns.cache)
-      Diagnostics.refresh(lsp.assigns.cache, lsp)
-      Diagnostics.publish(lsp.assigns.cache, lsp)
+      refresh(lsp)
+      publish(lsp)
     end)
 
     {:noreply, lsp}
@@ -123,7 +126,7 @@ defmodule Credo.Lsp do
   def handle_notification(%TextDocumentDidChange{}, lsp) do
     Task.start_link(fn ->
       Diagnostics.clear(lsp.assigns.cache)
-      Diagnostics.publish(lsp.assigns.cache, lsp)
+      publish(lsp)
     end)
 
     {:noreply, lsp}
@@ -143,4 +146,52 @@ defmodule Credo.Lsp do
   def handle_notification(_thing, lsp) do
     {:noreply, lsp}
   end
+
+  defp refresh(lsp) do
+    dir = URI.parse(lsp.assigns.root_uri).path
+
+    issues =
+      ["--strict", "--all", "#{dir}/**/*.ex"]
+      |> Credo.run()
+      |> Credo.Execution.get_issues()
+
+    GenLSP.log(lsp, :info, "[Credo] Found #{Enum.count(issues)} issues")
+
+    for issue <- issues do
+      diagnostic = %Diagnostic{
+        range: %Range{
+          start: %Position{line: issue.line_no - 1, character: (issue.column || 1) - 1},
+          end: %Position{line: issue.line_no - 1, character: issue.column || 1}
+        },
+        severity: category_to_severity(issue.category),
+        data: %{check: issue.check, file: issue.filename},
+        message: """
+        #{issue.message}
+
+        ## Explanation
+
+        #{issue.check.explanations()[:check]}
+        """
+      }
+
+      Diagnostics.put(lsp.assigns.cache, Path.absname(issue.filename), diagnostic)
+    end
+  end
+
+  defp publish(lsp) do
+    for {file, diagnostics} <- Diagnostics.get(lsp.assigns.cache) do
+      GenLSP.notify(lsp, %GenLSP.Notifications.TextDocumentPublishDiagnostics{
+        params: %GenLSP.Structures.PublishDiagnosticsParams{
+          uri: "file://#{file}",
+          diagnostics: diagnostics
+        }
+      })
+    end
+  end
+
+  defp category_to_severity(:refactor), do: 1
+  defp category_to_severity(:warning), do: 2
+  defp category_to_severity(:design), do: 3
+  defp category_to_severity(:consistency), do: 4
+  defp category_to_severity(:readability), do: 4
 end
