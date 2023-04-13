@@ -4,7 +4,7 @@ defmodule Credo.Lsp do
   """
   use GenLSP
 
-  alias GenLSP.Enumerations.{CodeActionKind, TextDocumentSyncKind}
+  alias GenLSP.Enumerations.{CodeActionKind, TextDocumentSyncKind, DiagnosticSeverity}
 
   alias GenLSP.Notifications.{
     Exit,
@@ -189,9 +189,9 @@ defmodule Credo.Lsp do
     end
   end
 
-  defp category_to_severity(:refactor), do: 1
-  defp category_to_severity(:warning), do: 2
-  defp category_to_severity(:design), do: 3
-  defp category_to_severity(:consistency), do: 4
-  defp category_to_severity(:readability), do: 4
+  defp category_to_severity(:refactor), do: DiagnosticSeverity.error()
+  defp category_to_severity(:warning), do: DiagnosticSeverity.warning()
+  defp category_to_severity(:design), do: DiagnosticSeverity.information()
+  defp category_to_severity(:consistency), do: DiagnosticSeverity.hint()
+  defp category_to_severity(:readability), do: DiagnosticSeverity.hint()
 end

@@ -1,5 +1,5 @@
 defmodule Credo.LspTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case, async: true
 
   import GenLSP.Test
   alias Credo.Lsp
@@ -99,12 +99,8 @@ defmodule Credo.LspTest do
       2,
       [
         %{
-          "command" => nil,
           "data" => nil,
-          "diagnostics" => nil,
-          "disabled" => nil,
           "edit" => %{
-            "changeAnnotations" => nil,
             "changes" => %{
               ^uri => [
                 %{
@@ -117,10 +113,7 @@ defmodule Credo.LspTest do
                 }
               ]
             },
-            "documentChanges" => nil
           },
-          "isPreferred" => nil,
-          "kind" => nil,
           "title" => "Disable Credo.Check.Readability.ModuleDoc"
         }
       ]
